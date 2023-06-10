@@ -7,7 +7,6 @@ const User = require('./models/User.js');
 const Place = require('./models/Place.js');
 const Booking = require('./models/Booking.js');
 const cookieParser = require('cookie-parser');
-const imageDownloader = require('image-downloader');
 const multer = require('multer');
 const fs = require('fs');
 
@@ -19,7 +18,7 @@ const jwtSecret = "asdfe45we45w345wegw345werjktjwertkj"
 
 app.use(cors({
   credentials: true,
-  origin: ["http://localhost:5173","https://airbnb-react-simple.vercel.app"],
+  origin: true,
   default: "https://airbnb-react-simple.vercel.app"
 }));
 app.use(express.json());
