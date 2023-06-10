@@ -28,8 +28,11 @@ app.use('/uploads', express.static(__dirname + '/uploads'));
 mongoose.connect(process.env.MONGO_URL);
 
 function getUserDataFromReq(req) {
+  const authHeader = req.headers['authorization']
+  const token = authHeader && authHeader.split(' ')[1]
+
   return new Promise((resolve, reject) => {
-    jwt.verify(req.cookies.token, jwtSecret, {}, async (err, userData) => {
+    jwt.verify(token, jwtSecret, {}, async (err, userData) => {
       if (err) throw err;
       resolve(userData);
     });
@@ -83,7 +86,9 @@ app.post('/api/login', async (req, res) => {
 });
 
 app.get('/api/profile', (req, res) => {
-  const { token } = req.cookies;
+  const authHeader = req.headers['authorization']
+  const token = authHeader && authHeader.split(' ')[1]
+
   if (token) {
     jwt.verify(token, jwtSecret, {}, async (err, userData) => {
       if (err) throw err;
@@ -91,7 +96,7 @@ app.get('/api/profile', (req, res) => {
       res.json({ name, email, _id });
     });
   } else {
-    res.json(null);
+    res.sendStatus(401).json(null);
   }
 });
 
@@ -126,8 +131,9 @@ app.post('/api/upload', photosMiddleware.array('photos', 100), (req, res) => {
 });
 
 app.post('/api/places', (req, res) => {
-  const { token } = req.cookies;
-  console.log({ token: req.cookies.token })
+  const authHeader = req.headers['authorization']
+  const token = authHeader && authHeader.split(' ')[1]
+
   const {
     title, address, addedPhotos, description, price,
     perks, extraInfo, checkIn, checkOut, maxGuests,
@@ -139,12 +145,14 @@ app.post('/api/places', (req, res) => {
       title, address, photos: addedPhotos, description,
       perks, extraInfo, checkIn, checkOut, maxGuests,
     });
-    res.json(placeDoc);
+    res.sendStatus(401).json(placeDoc);
   });
 });
 
 app.get('/api/user-places', (req, res) => {
-  const { token } = req.cookies;
+  const authHeader = req.headers['authorization']
+  const token = authHeader && authHeader.split(' ')[1]
+
   jwt.verify(token, jwtSecret, {}, async (err, userData) => {
     console.log({ err, userData })
     const { id } = userData;
@@ -158,7 +166,9 @@ app.get('/api/places/:id', async (req, res) => {
 });
 
 app.put('/api/places', async (req, res) => {
-  const { token } = req.cookies;
+  const authHeader = req.headers['authorization']
+  const token = authHeader && authHeader.split(' ')[1]
+
   const {
     id, title, address, addedPhotos, description,
     perks, extraInfo, checkIn, checkOut, maxGuests, price,
