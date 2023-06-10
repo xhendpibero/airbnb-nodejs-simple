@@ -19,7 +19,8 @@ const jwtSecret = "asdfe45we45w345wegw345werjktjwertkj"
 
 app.use(cors({
   credentials: true,
-  origin: 'http://localhost:5173',
+  origin: ["http://localhost:5173","https://airbnb-react-simple.vercel.app"],
+  default: "https://airbnb-react-simple.vercel.app"
 }));
 app.use(express.json());
 app.use(cookieParser());
@@ -70,7 +71,8 @@ app.post('/api/login', async (req, res) => {
         res.cookie('token', token).json({
           email: userDoc.email,
           name: userDoc.name,
-          id: userDoc._id
+          id: userDoc._id,
+          token
         });
       });
     } else {
