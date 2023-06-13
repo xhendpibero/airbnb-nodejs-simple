@@ -106,7 +106,8 @@ app.post('/api/logout', (req, res) => {
 
 
 app.post('/api/upload-by-link', async (req, res) => {
-  const { link } = req.body;
+  const { link, vps } = req.body;
+  if(vps) return res.json(link);
   const request = require('request').defaults({ encoding: null });
   request.get(link, function (error, response, body) {
     if (!error && response.statusCode == 200) {
