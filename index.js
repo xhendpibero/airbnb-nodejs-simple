@@ -18,7 +18,7 @@ const jwtSecret = "asdfe45we45w345wegw345werjktjwertkj"
 
 app.use(cors({
   credentials: true,
-  origin: true,
+  origin: ["http://localhost:3000","https://airbnb-react-simple.vercel.app","http://localhost:3001"],
   default: "https://airbnb-react-simple.vercel.app"
 }));
 app.use(express.json());
@@ -38,10 +38,6 @@ function getUserDataFromReq(req) {
     });
   });
 }
-
-app.get('/api/test', (req, res) => {
-  res.json(req.cookies.token);
-});
 
 app.post('/api/register', async (req, res) => {
   const { name, email, password } = req.body;
@@ -81,7 +77,33 @@ app.post('/api/login', async (req, res) => {
       res.status(422).json('pass not ok');
     }
   } else {
-    res.json('not found');
+    res.status(401).json({ok: false});
+  }
+});
+
+app.get('/api/login', async (req, res) => {
+  const { email, password } = req.body;
+  const userDoc = await User.findOne({ email });
+  if (userDoc) {
+    const passOk = bcrypt.compareSync(password, userDoc.password);
+    if (passOk) {
+      jwt.sign({
+        email: userDoc.email,
+        id: userDoc._id
+      }, jwtSecret, {}, (err, token) => {
+        if (err) throw err;
+        res.cookie('token', token).json({
+          email: userDoc.email,
+          name: userDoc.name,
+          id: userDoc._id,
+          token
+        });
+      });
+    } else {
+      res.status(422).json('pass not ok');
+    }
+  } else {
+    res.status(401).json({ok: false});
   }
 });
 
@@ -96,7 +118,7 @@ app.get('/api/profile', (req, res) => {
       res.json({ name, email, _id });
     });
   } else {
-    res.sendStatus(401).json(null);
+    res.status(401).json(null);
   }
 });
 
@@ -133,20 +155,30 @@ app.post('/api/upload', photosMiddleware.array('photos', 100), (req, res) => {
 
 app.post('/api/places', (req, res) => {
   const authHeader = req.headers['authorization']
+  console.log({authHeader})
   const token = authHeader && authHeader.split(' ')[1]
 
   const {
     title, address, addedPhotos, description, price,
     perks, extraInfo, checkIn, checkOut, maxGuests,
   } = req.body;
+  console.log({title, address, addedPhotos, description, price,
+    perks, extraInfo, checkIn, checkOut, maxGuests,})
+
   jwt.verify(token, jwtSecret, {}, async (err, userData) => {
-    if (err) throw err;
+    if (err) {
+      console.log(err);
+      res.status(500);
+      return;
+    }
     const placeDoc = await Place.create({
       owner: userData.id, price,
       title, address, photos: addedPhotos, description,
       perks, extraInfo, checkIn, checkOut, maxGuests,
     });
-    res.sendStatus(401).json(placeDoc);
+    console.log({placeDoc})
+    res.status(200).json(placeDoc);
+    return;
   });
 });
 
